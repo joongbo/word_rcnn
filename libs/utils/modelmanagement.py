@@ -11,7 +11,7 @@ from backpropagations import *
 def training_model(datasets, models, opts, learning_opts, fresult, params, i=0):
     train_data, valid_data, test_data = datasets
     train_model, valid_model, test_model = models
-    fresult = 'trial' + str(i) + '_' + fresult
+    fresult = fresult + '.trial_' + str(i)
     mb = opts['miniBatch']
     n_mb_train = len(train_data[1])
     n_mb_train //= mb
