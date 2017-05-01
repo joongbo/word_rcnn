@@ -77,14 +77,14 @@ def main():
     datasets = [train_data, valid_data, test_data]
     models = [train_model, valid_model, test_model]
     
-    for i in xrange(5):
-        initializing_model(layers, params, svd_initialize=opts['initSVD'])
-        training_model(datasets, models, opts, learning_opts, fresult, params, i)
+#     for i in xrange(5):
+#         initializing_model(layers, params, svd_initialize=opts['initSVD'])
+#         training_model(datasets, models, opts, learning_opts, fresult, params, i)
         
-    opts['initSVD'] = True    
+    opts['initSVD'] = True
     for i in xrange(5):
         initializing_model(layers, params, svd_initialize=opts['initSVD'])
-        training_model(datasets, models, opts, learning_opts, fresult, params, i)
+        training_model(datasets, models, opts, learning_opts, fresult, params, i+5)
 
 if __name__=='__main__':
     main()

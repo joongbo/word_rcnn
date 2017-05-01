@@ -101,7 +101,7 @@ class CPLayer(object):
         self.params = [self.W, self.b]
         
     def svd_initialize_weights(self):
-        W_value = svd_orthonomal(self.rng, [self.filter_shape])
+        W_value = svd_orthonomal(self.rng, self.filter_shape)
         b_value = np.zeros((self.filter_shape[0],))
         W = theano.shared(name='W', value=W_value.astype(theano.config.floatX), borrow=True)
         b = theano.shared(name='b', value=b_value.astype(theano.config.floatX), borrow=True)

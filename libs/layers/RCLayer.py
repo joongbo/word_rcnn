@@ -55,7 +55,7 @@ class RCLayer(object):
 
         self.LRN = LRN
         if W is None and b is None:
-            self.initialize_weights()
+            self.svd_initialize_weights()
         else:
             if W is None or b is None:
                 raise TypeError('one of parameters is not given', ('W', W, 'b', b)) 
@@ -106,7 +106,7 @@ class RCLayer(object):
         self.params = [self.W, self.b]
         
     def svd_initialize_weights(self):
-        W_value = svd_orthonomal(self.rng, [self.filter_shape])
+        W_value = svd_orthonomal(self.rng, self.filter_shape)
         b_value = np.zeros((self.filter_shape[0],))
         W = theano.shared(name='W', value=W_value.astype(theano.config.floatX), borrow=True)
         b = theano.shared(name='b', value=b_value.astype(theano.config.floatX), borrow=True)
