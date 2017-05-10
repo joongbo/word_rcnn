@@ -30,7 +30,6 @@ def main(fNames, opts, learning_opts):
     data, vocab = load_sst(data_file=dataFpath)
     w2v, word2idx = load_w2v(data_file=w2vFpath)
     assert len(vocab)==len(w2v)
-    print '\tdone.'
     
     # embedding
     opts['vocaSize'] = len(vocab)
@@ -51,11 +50,10 @@ def main(fNames, opts, learning_opts):
     train_data = fit_length(data[0], max_len=opts['maxLen'])
     valid_data = fit_length(data[1], max_len=opts['maxLen_test'])
     test_data = fit_length(data[2], max_len=opts['maxLen_test'])
-    print '\tdone.'
 
     print 'fitting mini-batch size for training data ...',
     train_data = fit_batch_add(train_data, opts['miniBatch'])
-    print '\tdone.\n'
+    print '\n'
     
     start_time = timeit.default_timer()
     train_model, valid_model, test_model, layers, params = building_model(opts)
