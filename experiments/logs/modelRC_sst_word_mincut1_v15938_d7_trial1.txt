@@ -1,0 +1,13 @@
+{'kTop': 1, 'maxLen_test': 56, 'dropRate': 0.7, 'updateRule': <function adam at 0x7f40881ac1b8>, 'dropRC': True, 'LRN': True, 'numStep': 1, 'vocaSize': 15938, 'fltrRC': [[(300, 5, 5)]], 'borderMode': 'full', 'embdUpdate': True, 'outUnit': [5], 'embdSize': 300, 'initSVD': False, 'maxLen': 52, 'miniBatch': 100, 'L2': 2e-05, 'L1': 0.0, 'activationFC': <function tanh at 0x7f40881ac9b0>, 'pool': True, 'dropFC': True, 'poolMode': 'max', 'w2v': array([[ 0.       ,  0.       ,  0.       , ...,  0.       ,  0.       ,
+         0.       ],
+       [ 0.       ,  0.       ,  0.       , ...,  0.       ,  0.       ,
+         0.       ],
+       [ 0.10876  ,  0.0022438,  0.22213  , ..., -0.29696  ,  0.15939  ,
+        -0.14902  ],
+       ..., 
+       [ 0.20622  , -0.2929   ,  0.092787 , ..., -0.079015 , -0.11055  ,
+        -0.09533  ],
+       [-0.03713  , -0.039274 , -0.48241  , ...,  0.10154  ,  0.1674   ,
+        -0.23708  ],
+       [-0.24095  , -0.19441  ,  0.10102  , ..., -0.055153 ,  0.055332 ,
+        -0.21279  ]]), 'activationRC': <function relu at 0x7f40881ac8c0>}{'maxEpoch': 10, 'trainN': 3, 'lr': 0.001, 'lrDecayStep': 3, 'lrDecay': 0.1}	train performance (accuracy) 65.11 %	[epoch] 1minibatch 1593/1593validation performance (accuracy) 43.69 %	test performance of best model (accuracy) 45.16 %	train performance (accuracy) 66.52 %	[epoch] 2minibatch 1593/1593validation performance (accuracy) 46.32 %	test performance of best model (accuracy) 46.20 %	train performance (accuracy) 68.18 %	[epoch] 3minibatch 1593/1593validation performance (accuracy) 46.59 %	test performance of best model (accuracy) 46.33 %	train performance (accuracy) 69.81 %	[epoch] 4minibatch 1593/1593validation performance (accuracy) 45.78 %	train performance (accuracy) 70.58 %	[epoch] 5minibatch 1593/1593validation performance (accuracy) 45.14 %	train performance (accuracy) 71.22 %	[epoch] 6minibatch 1593/1593validation performance (accuracy) 45.69 %	train performance (accuracy) 68.66 %	[epoch] 7minibatch 1593/1593validation performance (accuracy) 46.41 %	train performance (accuracy) 68.83 %	[epoch] 8minibatch 1593/1593validation performance (accuracy) 46.50 %	train performance (accuracy) 69.07 %	[epoch] 9minibatch 1593/1593validation performance (accuracy) 46.32 %	train performance (accuracy) 68.40 %	[epoch] 10minibatch 1593/1593validation performance (accuracy) 47.14 %	test performance of best model (accuracy) 46.97 %Best validation score of 47.138965 % with test performance 46.968326 %The code ran for 96.89m

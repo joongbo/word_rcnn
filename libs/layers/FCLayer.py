@@ -40,20 +40,14 @@ class FCLayer(object):
         self.output = self.activation(self.output)
         
         
-    def initialize_weights(self):
-        if self.activation in [relu]:
-            W_value = self.rng.randn(self.n_in, self.n_out) / np.sqrt(self.n_in/2)
+    def initialize_weights(self, svd_init=False):
+        if svd_init:
+            W_value = svd_orthonomal(self.rng, [self.n_in, self.n_out])
         else:
-            W_value = self.rng.randn(self.n_in, self.n_out) / np.sqrt(self.n_in)
-        b_value = np.zeros((self.n_out,))
-        W = theano.shared(name='W', value=W_value.astype(theano.config.floatX), borrow=True)
-        b = theano.shared(name='b', value=b_value.astype(theano.config.floatX), borrow=True)
-        self.W = W
-        self.b = b
-        self.params = [self.W, self.b]
-    
-    def svd_initialize_weights(self):
-        W_value = svd_orthonomal(self.rng, [self.n_in, self.n_out])
+            if self.activation in [relu]:
+                W_value = self.rng.randn(self.n_in, self.n_out) / np.sqrt(self.n_in/2)
+            else:
+                W_value = self.rng.randn(self.n_in, self.n_out) / np.sqrt(self.n_in)
         b_value = np.zeros((self.n_out,))
         W = theano.shared(name='W', value=W_value.astype(theano.config.floatX), borrow=True)
         b = theano.shared(name='b', value=b_value.astype(theano.config.floatX), borrow=True)

@@ -11,8 +11,9 @@ import theano.sandbox.cuda
 theano.sandbox.cuda.use("gpu1")
 
 def main():
-    data_fname='sst_word_mincut1.pkl'
+    data_fname='sst_word_mincut1_voca15938.pkl'
     data_fpath='../data/pickles/' + data_fname
+    w2v_fpath ='../data/pickles/w2v_sst_glove_mincut1_voca15938.pkl'
     
     if True: # [Not implemented] if-statement for different model
         fresult = './savings/baseModel_' + data_fname
@@ -20,6 +21,8 @@ def main():
     
     print 'load data ...',
     data, vocab = load_sst(data_file=data_fpath)
+    word2vec, word2idx = load_w2v(data_file=w2v_fpath)
+    assert len(vocab)==len(word2vec)
     print '\tdone.'
 
     opts = dict()
@@ -28,6 +31,7 @@ def main():
     # embedding
     opts['vocaSize'] = len(vocab)
     opts['embdSize'] = 300
+    opts['w2v'] = word2vec
     opts['embdUpdate'] = True
     # recurrent convolutional layer
     opts['maxLen'] = max(data[0][2])
@@ -49,10 +53,10 @@ def main():
     opts['LRN'] = True # local response normalization
     opts['dropRC'] = True
     opts['dropFC'] = True
-    opts['dropRate'] = 0.5
+    opts['dropRate'] = 0.8
     # generalizations
     opts['L1'] = 0 # L1-norm weight decay
-    opts['L2'] = 1e-4 # L2-norm weight decay
+    opts['L2'] = 0 # L2-norm weight decay
     # training parameters
     opts['updateRule'] = adam # one of ['adam', 'adadelta', 'adagrad', 'sgd', 'sgd_momentum']
 
@@ -77,13 +81,14 @@ def main():
     datasets = [train_data, valid_data, test_data]
     models = [train_model, valid_model, test_model]
     
-#     for i in xrange(5):
-#         initializing_model(layers, params, svd_initialize=opts['initSVD'])
-#         training_model(datasets, models, opts, learning_opts, fresult, params, i)
-        
     opts['initSVD'] = True
-    for i in xrange(5):
-        initializing_model(layers, params, svd_initialize=opts['initSVD'])
+    for i in xrange(1):
+        initializing_model(opts, layers, params)
+        training_model(datasets, models, opts, learning_opts, fresult, params, i)
+        
+    opts['initSVD'] = False
+    for i in xrange(1):
+        initializing_model(opts, layers, params)
         training_model(datasets, models, opts, learning_opts, fresult, params, i+5)
 
 if __name__=='__main__':

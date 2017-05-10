@@ -11,7 +11,9 @@ from backpropagations import *
 def training_model(datasets, models, opts, learning_opts, fresult, params, i=0):
     train_data, valid_data, test_data = datasets
     train_model, valid_model, test_model = models
-    fresult = fresult + '.trial_' + str(i)
+    fresult = fresult.replace('.pkl', '_trial' + str(i) +'.pkl')
+    fpresult = fresult.replace('savings','logs')
+    fpresult = fpresult.replace('pkl','txt')
     mb = opts['miniBatch']
     n_mb_train = len(train_data[1])
     n_mb_train //= mb
@@ -33,6 +35,9 @@ def training_model(datasets, models, opts, learning_opts, fresult, params, i=0):
     start_time = timeit.default_timer()
     print 'opts:', opts, '\n'
     print 'learning_opts:', learning_opts, '\n'
+    fp = open(fpresult, 'wb')
+    fp.write(str(opts))
+    fp.write(str(learning_opts))
     print 'training ...'
     for epoch in xrange(learning_opts['maxEpoch']):
         train_x, train_y, train_s = shuffle_data(train_data)
@@ -47,11 +52,11 @@ def training_model(datasets, models, opts, learning_opts, fresult, params, i=0):
                                train_y[mb_index * mb: (mb_index + 1) * mb],
                                train_s[mb_index * mb: (mb_index + 1) * mb], 
                                lr)
-            # set zeros
-            matrix_embd = params[0].get_value()
-            matrix_embd[0,:] = np.zeros(opts['embdSize'])
-#             matrix_embd[1,:] = np.zeros(opts['embdSize'])
-            params[0].set_value(matrix_embd)
+            if opts['embdUpdate']:
+                # set zeros
+                matrix_embd = params[0].get_value()
+                matrix_embd[0,:] = np.zeros(opts['embdSize'])
+                params[0].set_value(matrix_embd)
             
         train_errors = []
         for mb_index in xrange(n_mb_train):
@@ -61,15 +66,18 @@ def training_model(datasets, models, opts, learning_opts, fresult, params, i=0):
             train_errors.append(_error)
         train_accuracy = 1 - np.mean(train_errors)
         print '\ttrain performance (accuracy) %.2f %%' %(train_accuracy*100.)
+        fp.write('\ttrain performance (accuracy) %.2f %%' %(train_accuracy*100.))
         
         # compute error on validation set
-        
         now_valid_accuracy = testing_model(valid_data, test_model)
 
         print '\t[epoch] %i' %(epoch+1),
         print 'minibatch %i/%i' %(mb_index+1,n_mb_train),
         print 'validation performance (accuracy) %.2f %%' %(now_valid_accuracy*100.)
-
+        fp.write('\t[epoch] %i' %(epoch+1))
+        fp.write('minibatch %i/%i' %(mb_index+1,n_mb_train))
+        fp.write('validation performance (accuracy) %.2f %%' %(now_valid_accuracy*100.))
+        
         # if we got the best validation score until now
         if now_valid_accuracy > best_valid_accuracy:
             f = open(fresult, 'wb')
@@ -81,7 +89,8 @@ def training_model(datasets, models, opts, learning_opts, fresult, params, i=0):
             # test it on the test set
             test_accuracy = testing_model(test_data, test_model)
             print '\ttest performance of best model (accuracy) %.2f %%' %(test_accuracy*100.)
-        
+            fp.write('\ttest performance of best model (accuracy) %.2f %%' %(test_accuracy*100.))
+            
         if (epoch+1) % lrDecayStep == 0:
             f = open(fresult, 'rb')
             _, _, new_params = pkl.load(f)
@@ -95,6 +104,9 @@ def training_model(datasets, models, opts, learning_opts, fresult, params, i=0):
     print 'Optimization complete.'
     print 'Best validation score of %f %% with test performance %f %%' %(best_valid_accuracy * 100., test_accuracy * 100.) 
     print 'The code ran for %.2fm' % ( (end_time - start_time) / 60. )
+    fp.write('Best validation score of %f %% with test performance %f %%' %(best_valid_accuracy * 100., test_accuracy * 100.))
+    fp.write('The code ran for %.2fm' % ( (end_time - start_time) / 60. ))
+    fp.close()
 
     
 def testing_model(data, model):
@@ -110,25 +122,21 @@ def testing_model(data, model):
     return accuracy
 
 
-def initializing_model(layers, params, svd_initialize=False):
-    ''' again '''
+def initializing_model(opts, layers, params):
     new_params = []
     for layer in layers:
         if isinstance(layer, list):
             for _layer in layer:
-                if svd_initialize:
-                    _layer.svd_initialize_weights()
-                else:
-                    _layer.initialize_weights()
+                _layer.initialize_weights(svd_init=opts['initSVD'])
                 new_params += _layer.params
         else:
-            if svd_initialize:
-                layer.svd_initialize_weights()
-            else:
-                layer.initialize_weights()
+            layer.initialize_weights(svd_init=opts['initSVD'])
             new_params += layer.params
-            
-    updates = OrderedDict()
+        
+    if opts['embdUpdate'] is not True:
+        new_params = new_params[1:]
+
     for param, new_param in zip(params, new_params):
         param.set_value(new_param.get_value())
+    
     print 'Initialized model successfully'

@@ -41,22 +41,6 @@ def building_model(opts):
 
     layers = [layerWE]
     for l in xrange(l_RC_layer):
-        # convolution first
-        players = []
-        for p in xrange(p_RC_layer):
-            layerCP = CPLayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['borderMode'], LRN=opts['LRN'], 
-                              L=l_RC_layer, l=l+1, k_top=opts['kTop'], s=s,
-                              activation=opts['activationRC'])
-            players.append(layerCP)
-        layers.append(players)
-
-        # calculate for next layers
-        inputs = []
-        input_shapes = []
-        for p in xrange(p_RC_layer):
-            inputs.append(players[p].output)
-            input_shapes.append(players[p].output_shape)
-
         # repeat above but using recurrent convolution
         players = []
         for p in xrange(p_RC_layer):
@@ -162,22 +146,6 @@ def building_model(opts):
 
     layers_cnt = 1
     for l in xrange(l_RC_layer):
-        # convolution first
-        players = []
-        for p in xrange(p_RC_layer):
-            layerCP = CPLayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['borderMode'], LRN=opts['LRN'], 
-                              L=l_RC_layer, l=l+1, k_top=opts['kTop'], s=s,
-                              activation=opts['activationRC'], W=layers[layers_cnt][p].W, b=layers[layers_cnt][p].b)
-            players.append(layerCP)
-        layers_cnt += 1
-
-        # calculate for next layers
-        inputs = []
-        input_shapes = []
-        for p in xrange(p_RC_layer):
-            inputs.append(players[p].output)
-            input_shapes.append(players[p].output_shape)
-
         # repeat above but using recurrent convolution
         players = []
         for p in xrange(p_RC_layer):

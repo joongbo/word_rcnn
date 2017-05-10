@@ -84,30 +84,24 @@ class CPLayer(object):
                 self._dynamic_kmax_pooling()
                 
                 
-    def initialize_weights(self):
-        fan_in = np.prod(self.filter_shape[1:])
-        fan_out = self.filter_shape[0] * np.prod(self.filter_shape[2:])
-        W_value = self.rng.randn(self.filter_shape[0], self.filter_shape[1],
-                                 self.filter_shape[2], self.filter_shape[3])
-        if self.activation in [relu]:
-            W_value = W_value / np.sqrt(fan_in / 2)
+    def initialize_weights(self, svd_init=False):
+        if svd_init:
+            W_value = svd_orthonomal(self.rng, self.filter_shape)
         else:
-            W_value = W_value / np.sqrt(fan_in)
-        b_value = np.zeros((self.filter_shape[0],))
-        W = theano.shared(name='W', value=W_value.astype(theano.config.floatX), borrow=True)
-        b = theano.shared(name='b', value=b_value.astype(theano.config.floatX), borrow=True)
-        self.W = W
-        self.b = b
-        self.params = [self.W, self.b]
-        
-    def svd_initialize_weights(self):
-        W_value = svd_orthonomal(self.rng, self.filter_shape)
-        b_value = np.zeros((self.filter_shape[0],))
-        W = theano.shared(name='W', value=W_value.astype(theano.config.floatX), borrow=True)
-        b = theano.shared(name='b', value=b_value.astype(theano.config.floatX), borrow=True)
-        self.W = W
-        self.b = b
-        self.params = [self.W, self.b]
+            fan_in = np.prod(self.filter_shape[1:])
+            fan_out = self.filter_shape[0] * np.prod(self.filter_shape[2:])
+            W_value = self.rng.randn(self.filter_shape[0], self.filter_shape[1],
+                                     self.filter_shape[2], self.filter_shape[3])
+            if self.activation in [relu]:
+                W_value = W_value / np.sqrt(fan_in / 2)
+            else:
+                W_value = W_value / np.sqrt(fan_in)
+            b_value = np.zeros((self.filter_shape[0],))
+            W = theano.shared(name='W', value=W_value.astype(theano.config.floatX), borrow=True)
+            b = theano.shared(name='b', value=b_value.astype(theano.config.floatX), borrow=True)
+            self.W = W
+            self.b = b
+            self.params = [self.W, self.b]
         
     # response normalization
     def _local_resp_normalize(self, K, alpha=0.001, beta=0.75):

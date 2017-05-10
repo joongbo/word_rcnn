@@ -2,8 +2,15 @@ import cPickle as pkl
 import numpy as np
 
 
+def load_w2v(data_file):
+    pkl_f = open(data_file, 'rb')
+    word2vec, word2idx = pkl.load(pkl_f)
+    pkl_f.close()
+    
+    return word2vec, word2idx
+
 # load twitter dataset from .pkl file
-def load_sst(data_file='sst_word.pkl'):
+def load_sst(data_file):
     pkl_f = open(data_file, 'rb')
     train, valid, test, vocab = pkl.load(pkl_f)
     pkl_f.close()
@@ -17,7 +24,7 @@ def load_sst(data_file='sst_word.pkl'):
     return data, vocab
 
 # load twitter dataset from .pkl file
-def load_s140(data_file='s140_word.pkl', num_valid=12000):
+def load_s140(data_file, num_valid=12000):
     pkl_f = open(data_file, 'rb')
     train, test, vocab = pkl.load(pkl_f)
     pkl_f.close()
