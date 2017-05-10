@@ -1,5 +1,8 @@
 *.pyc
 *.ipynb_checkpoints
 *.out
-*.pkl*
+*.pkl
+*.txt
 data
+savings
+logs

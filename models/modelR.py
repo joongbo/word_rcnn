@@ -14,7 +14,7 @@ from CPdropLayer import CPdropLayer
 from RCdropLayer import RCdropLayer
 
 def building_model(opts):
-    print 'build layers of RCNN ...',
+    print 'build layers of RCNN ...'
     rng = np.random.RandomState(21625)
     trng = T.shared_randomstreams.RandomStreams(21625)
     
@@ -86,16 +86,8 @@ def building_model(opts):
                                   activation=opts['activationFC'])
         _input = layerFC.output
         layers.append(layerFC)
-    print '\tdone.'
-
-    print 'build theano function of validation model ...',
-    valid_model = theano.function([x, y, s], 
-                                  layerFC.predict_errors(y), 
-                                  allow_input_downcast=True, 
-                                  on_unused_input='ignore')
-    print '\tdone.'
     
-    print 'build cost function and get update rule ...',
+    print 'build cost function and get update rule ...'
     # parameters
     params = []
     for layer in layers:
@@ -106,6 +98,7 @@ def building_model(opts):
             params += layer.params
     if opts['embdUpdate'] is not True:
         params = params[1:]
+    
     # loss function
     norm_l1 = 0
     norm_l2 = 0
@@ -113,22 +106,26 @@ def building_model(opts):
         norm_l1 += T.sum(T.abs_(param))
         norm_l2 += T.sum(param**2)
     cost = layerFC.cross_entropy(y)
-    #     cost = layerFC.negative_log_likelihood(y)
+    # cost = layerFC.negative_log_likelihood(y)
     cost += opts['L1']*norm_l1 + opts['L2']*norm_l2
     grads = T.grad(cost, params)
     updates = opts['updateRule'](grads, params, learning_rate = leaning_rate)
-    print '\tdone.'
+    
+    print 'build theano function of validation model ...'
+    valid_model = theano.function([x, y, s], 
+                                  layerFC.predict_errors(y), 
+                                  allow_input_downcast=True, 
+                                  on_unused_input='ignore')
 
-    print 'build theano function of training model ...',
+    print 'build theano function of training model ...'
     train_model = theano.function([x, y, s, leaning_rate], cost, 
                                   updates=updates, 
                                   allow_input_downcast=True, 
                                   on_unused_input='ignore')
-    print '\tdone.'
 
     """ build test_model"""
 
-    print 'build testing layers of RCNN ...',
+    print 'build testing layers of RCNN ...'
     # allocate symbolic variables for the data
     x_test = T.ivector('x_test') # the data is presented as rasterized images
     y_test = T.iscalar('y_test') # the labels are presented as 1D vector of [int] labels
@@ -181,13 +178,11 @@ def building_model(opts):
                               activation=opts['activationFC'], W=layers[layers_cnt].W, b=layers[layers_cnt].b)
         layers_cnt += 1
         _input = layerFC.output
-    print '\tdone.'
 
-    print 'build theano function of testing model ...',
+    print 'build theano function of testing model ...'
     test_model = theano.function([x_test, y_test, s_test], 
                                   layerFC.predict_errors(y_test.dimshuffle('x')), 
                                   allow_input_downcast=True, 
                                   on_unused_input='ignore')
-    print '\tdone.'
     
     return train_model, valid_model, test_model, layers, params

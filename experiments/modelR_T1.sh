@@ -1,0 +1,6 @@
+THEANO_FLAGS=device=cuda0 python sst_fine.py --model modelR --embd 0 --embdUpdate 1 --numFltrRC 300 --numStep 1 --dropRate 0.5 --L2 1e-4 --log ssa_v18242_T1_d5.pkl 
+THEANO_FLAGS=device=cuda0 python sst_fine.py --model modelR --embd 1 --embdUpdate 0 --numFltrRC 300 --numStep 1 --dropRate 0.5 --L2 1e-4 --log ssa_v18242_T1_glove_d5.pkl
+THEANO_FLAGS=device=cuda0 python sst_fine.py --model modelR --embd 1 --embdUpdate 1 --numFltrRC 300 --numStep 1 --dropRate 0.5 --L2 1e-4 --log ssa_v18242_T1_gloveUp_d5.pkl
+THEANO_FLAGS=device=cuda0 python sst_fine.py --model modelR --embd 0 --embdUpdate 1 --numFltrRC 300 --numStep 1 --dropRate 0.2 --L2 1e-4 --log ssa_v18242_T1_d2.pkl
+THEANO_FLAGS=device=cuda0 python sst_fine.py --model modelR --embd 1 --embdUpdate 0 --numFltrRC 300 --numStep 1 --dropRate 0.2 --L2 1e-4 --log ssa_v18242_T1_glove_d2.pkl
+THEANO_FLAGS=device=cuda0 python sst_fine.py --model modelR --embd 1 --embdUpdate 1 --numFltrRC 300 --numStep 1 --dropRate 0.2 --L2 1e-4 --log ssa_v18242_T1_gloveUp_d2.pkl

@@ -63,19 +63,18 @@ class RCLayer(object):
             self.b = b
             self.params = [self.W, self.b]
         
-        
         # recurrent convolution output
         def _one_step(out_tm1):
             conv_out = conv2d(input=out_tm1, input_shape=self.input_shape, 
                            filters=self.W, filter_shape=self.filter_shape, 
                            border_mode='half')
-            out_t = self.input + conv_out + self.b.dimshuffle('x',0,'x','x')
+            out_t = self.input + T.addbroadcast(conv_out,3) + self.b.dimshuffle('x',0,'x','x')
             out_t = self.activation(out_t)
             if self.LRN: out_t = self._local_resp_normalize(out_t, self.filter_shape[0])
                     
             return out_t
         
-        self.initial = T.unbroadcast(self.input, 3)
+        self.initial = self.input
         out_t, _ = scan(fn=_one_step,
                         outputs_info=dict(initial=self.initial),
                         n_steps=self.n_steps)

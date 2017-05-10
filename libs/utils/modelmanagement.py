@@ -33,8 +33,6 @@ def training_model(datasets, models, opts, learning_opts, fresult, params, i=0):
             
     best_valid_accuracy = 0
     start_time = timeit.default_timer()
-    print 'opts:', opts, '\n'
-    print 'learning_opts:', learning_opts, '\n'
     fp = open(fpresult, 'wb')
     fp.write(str(opts))
     fp.write(str(learning_opts))
@@ -53,10 +51,12 @@ def training_model(datasets, models, opts, learning_opts, fresult, params, i=0):
                                train_s[mb_index * mb: (mb_index + 1) * mb], 
                                lr)
             if opts['embdUpdate']:
-                # set zeros
+                # normalize embeddings and set zeros for padding index
                 matrix_embd = params[0].get_value()
-                matrix_embd[0,:] = np.zeros(opts['embdSize'])
+                matrix_embd[0] = np.zeros(opts['embdSize'])
+                matrix_embd[1:] /= np.sqrt( (matrix_embd[1:]**2).sum(axis=1) )[:,None]
                 params[0].set_value(matrix_embd)
+                
             
         train_errors = []
         for mb_index in xrange(n_mb_train):
@@ -66,7 +66,7 @@ def training_model(datasets, models, opts, learning_opts, fresult, params, i=0):
             train_errors.append(_error)
         train_accuracy = 1 - np.mean(train_errors)
         print '\ttrain performance (accuracy) %.2f %%' %(train_accuracy*100.)
-        fp.write('\ttrain performance (accuracy) %.2f %%' %(train_accuracy*100.))
+        fp.write('\ttrain performance (accuracy) %.2f %%\n' %(train_accuracy*100.))
         
         # compute error on validation set
         now_valid_accuracy = testing_model(valid_data, test_model)
@@ -74,9 +74,8 @@ def training_model(datasets, models, opts, learning_opts, fresult, params, i=0):
         print '\t[epoch] %i' %(epoch+1),
         print 'minibatch %i/%i' %(mb_index+1,n_mb_train),
         print 'validation performance (accuracy) %.2f %%' %(now_valid_accuracy*100.)
-        fp.write('\t[epoch] %i' %(epoch+1))
-        fp.write('minibatch %i/%i' %(mb_index+1,n_mb_train))
-        fp.write('validation performance (accuracy) %.2f %%' %(now_valid_accuracy*100.))
+        fp.write('\t[epoch] %i minibatch %i/%i validation performance (accuracy) %.2f %%\n' 
+                 %(epoch+1, mb_index+1, n_mb_train, now_valid_accuracy*100.))
         
         # if we got the best validation score until now
         if now_valid_accuracy > best_valid_accuracy:
@@ -89,7 +88,8 @@ def training_model(datasets, models, opts, learning_opts, fresult, params, i=0):
             # test it on the test set
             test_accuracy = testing_model(test_data, test_model)
             print '\ttest performance of best model (accuracy) %.2f %%' %(test_accuracy*100.)
-            fp.write('\ttest performance of best model (accuracy) %.2f %%' %(test_accuracy*100.))
+            fp.write('\ttest performance of best model (accuracy) %.2f %%\n' 
+                     %(test_accuracy*100.))
             
         if (epoch+1) % lrDecayStep == 0:
             f = open(fresult, 'rb')
@@ -104,8 +104,10 @@ def training_model(datasets, models, opts, learning_opts, fresult, params, i=0):
     print 'Optimization complete.'
     print 'Best validation score of %f %% with test performance %f %%' %(best_valid_accuracy * 100., test_accuracy * 100.) 
     print 'The code ran for %.2fm' % ( (end_time - start_time) / 60. )
-    fp.write('Best validation score of %f %% with test performance %f %%' %(best_valid_accuracy * 100., test_accuracy * 100.))
-    fp.write('The code ran for %.2fm' % ( (end_time - start_time) / 60. ))
+    fp.write('Best validation score of %f %% with test performance %f %%\n' 
+             %(best_valid_accuracy * 100., test_accuracy * 100.))
+    fp.write('The code ran for %.2fm\n' 
+             %((end_time - start_time)/60.))
     fp.close()
 
     
