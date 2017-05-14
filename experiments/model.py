@@ -12,17 +12,15 @@ from backpropagations import *
 from activations import *
 
 def main(fNames, opts, learning_opts):
-    if fNames['model']=='modelCR': # if-statement for different model
-        fresult = './savings/modelCR_' + fNames['log']
-        from modelCR import building_model
-    elif fNames['model']=='modelR':
+    # if-statement for different model
+    if fNames['model']=='modelR':
         fresult = './savings/modelR_' + fNames['log']
         from modelR import building_model
-    elif fNames['model']=='modelRC':
-        fresult = './savings/modelRC_' + fNames['log']
+    elif fNames['model']=='modelRE':
+        fresult = './savings/modelRE_' + fNames['log']
         from modelRC import building_model
     else:
-        raise NotImplementedError()
+        raise NotImplementedError('Model must be one of {modelR, modelRE}')
     dataFpath='../data/pickles/' + fNames['data']
     w2vFpath ='../data/pickles/' + fNames['w2v']
     
@@ -55,6 +53,10 @@ def main(fNames, opts, learning_opts):
     train_data = fit_batch_add(train_data, opts['miniBatch'])
     print '\n'
     
+    print '\nfile names', fNames
+    print 'hyper parameters', opts
+    print 'learning parameters', learning_opts, '\n'
+        
     start_time = timeit.default_timer()
     train_model, valid_model, test_model, layers, params = building_model(opts)
     end_time = timeit.default_timer()
@@ -89,21 +91,23 @@ if __name__=='__main__':
     p.add_argument('--kTop', type=int, default=1)
     p.add_argument('--outUnit', type=int, default=0)
     p.add_argument('--initSVD', type=int, default=0)
-    p.add_argument('--LRN', type=int, default=1)
+    p.add_argument('--LRN', type=int, default=0)
+    p.add_argument('--BN', type=int, default=0)
+    p.add_argument('--dropWE', type=int, default=0)
     p.add_argument('--dropRC', type=int, default=1)
     p.add_argument('--dropFC', type=int, default=1)
     p.add_argument('--dropRate', type=float, default=0.5)
-    p.add_argument('--activationRC', default=relu)
-    p.add_argument('--activationFC', default=tanh)
+    p.add_argument('--activationRC', type=str, default='relu') # [elu, relu, tanh, iden, sigm]
+    p.add_argument('--activationFC', type=str, default='tanh') # [elu, relu, tanh, iden, sigm]
     p.add_argument('--L1', type=float, default=0.0)
     p.add_argument('--L2', type=float, default=0.0)
-    p.add_argument('--updateRule', default=adam)
+    p.add_argument('--updateRule', type=str, default='adam') # one of ['adam', 'adadelta', 'adagrad', 'sgd', 'sgd_momentum']
     #
     p.add_argument('--lr', type=float, default=0.001)
     p.add_argument('--lrDecay', type=float, default=0.1)
-    p.add_argument('--lrDecayStep', type=int, default=4)
-    p.add_argument('--maxEpoch', type=int, default=12)
-    p.add_argument('--trainN', type=int, default=3)
+    p.add_argument('--lrDecayStep', type=int, default=5)
+    p.add_argument('--maxEpoch', type=int, default=15)
+    p.add_argument('--trainN', type=int, default=5)
     args = p.parse_args()
     
     fNames = dict()
@@ -123,8 +127,30 @@ if __name__=='__main__':
     opts['fltrRC'] = [[(args.numFltrRC, args.fltrC, args.fltrR)]]
     opts['borderMode'] = args.borderMode # one of ['valid', 'full', 'half']
     opts['numStep'] = args.numStep
-    opts['activationRC'] = args.activationRC # [elu, relu, tanh, iden, sigm]
-    opts['activationFC'] = args.activationFC # [elu, relu, tanh, iden, sigm]
+    if args.activationRC=='relu':
+        opts['activationRC'] = relu 
+    elif args.activationRC=='tanh':
+        opts['activationRC'] = tanh
+    elif args.activationRC=='elu':
+        opts['activationRC'] = elu
+    elif args.activationRC=='iden':
+        opts['activationRC'] = iden
+    elif args.activationRC=='sigm':
+        opts['activationRC'] = sigm
+    else:
+        raise NotImplementedError('RC activation must be one of {relu, tanh, elu, iden, sigm}')
+    if args.activationFC=='relu':
+        opts['activationFC'] = relu 
+    elif args.activationFC=='tanh':
+        opts['activationFC'] = tanh
+    elif args.activationFC=='elu':
+        opts['activationFC'] = elu
+    elif args.activationFC=='iden':
+        opts['activationFC'] = iden
+    elif args.activationFC=='sigm':
+        opts['activationFC'] = sigm
+    else:
+        raise NotImplementedError('FC activation must be one of {relu, tanh, elu, iden, sigm}')
     # pooling
     opts['pool'] = True if args.pool else False
     opts['poolMode'] = args.poolMode # one of ['d_k_max', 'k_max', 'max', 'spatial]
@@ -135,6 +161,8 @@ if __name__=='__main__':
     opts['initSVD'] = True if args.initSVD else False
     # normalizations
     opts['LRN'] = True if args.LRN else False # local response normalization
+    opts['BN'] = True if args.BN else False
+    opts['dropWE'] = True if args.dropWE else False
     opts['dropRC'] = True if args.dropRC else False
     opts['dropFC'] = True if args.dropFC else False
     opts['dropRate'] = args.dropRate
@@ -142,7 +170,18 @@ if __name__=='__main__':
     opts['L1'] = args.L1 # L1-norm weight decay
     opts['L2'] = args.L2 # L2-norm weight decay
     # training parameters
-    opts['updateRule'] = args.updateRule # one of ['adam', 'adadelta', 'adagrad', 'sgd', 'sgd_momentum']
+    if args.updateRule=='adam':
+        opts['updateRule'] = adam
+    elif args.updateRule=='adadelta':
+        opts['updateRule'] = adadelta
+    elif args.updateRule=='adagrad':
+        opts['updateRule'] = adagrad
+    elif args.updateRule=='sgd':
+        opts['updateRule'] = sgd
+    elif args.updateRule=='sgd_momentum':
+        opts['updateRule'] = sgd_momentum
+    else:
+        raise NotImplementedError('Update Rule must be one of {adam, adadelta, adagrad, agd, sgd_momentum}')        
     
     learning_opts = dict()
     # learning options
@@ -151,9 +190,5 @@ if __name__=='__main__':
     learning_opts['lrDecayStep'] = args.lrDecayStep
     learning_opts['maxEpoch'] = args.maxEpoch
     learning_opts['trainN'] = args.trainN
-    
-    print '\nfile names', fNames
-    print 'hyper parameters', opts
-    print 'learning parameters', learning_opts, '\n'
-    
+
     main(fNames, opts, learning_opts)

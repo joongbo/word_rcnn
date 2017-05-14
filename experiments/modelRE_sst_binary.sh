@@ -1,0 +1,4 @@
+THEANO_FLAGS=device=cuda1 python model.py --model modelRE --data ssa_binary_v18242.pkl --w2v glove_ssa_binary_v18242.pkl --embd 1 --embdUpdate 0 --numFltrRC 300 --fltrR 5 --numStep 3 --outUnit 20 --dropRate 0.25 --L2 1e-4 --log ssa_binary_v18242_T3_hidd20_glove_drop.pkl
+THEANO_FLAGS=device=cuda1 python model.py --model modelRE --data ssa_binary_v18242.pkl --w2v glove_ssa_binary_v18242.pkl --embd 1 --embdUpdate 0 --numFltrRC 300 --fltrR 5 --numStep 2 --outUnit 20 --dropRate 0.25 --L2 1e-4 --log ssa_binary_v18242_T2_hidd20_glove_drop.pkl
+THEANO_FLAGS=device=cuda1 python model.py --model modelRE --data ssa_binary_v18242.pkl --w2v glove_ssa_binary_v18242.pkl --embd 1 --embdUpdate 0 --numFltrRC 300 --fltrR 5 --numStep 1 --outUnit 20 --dropRate 0.25 --L2 1e-4 --log ssa_binary_v18242_T1_hidd20_glove_drop.pkl
+#

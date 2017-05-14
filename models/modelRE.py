@@ -10,12 +10,14 @@ from WELayer import WELayer
 from FCLayer import FCLayer
 from CPLayer import CPLayer
 from RCLayer import RCLayer
+from RELayer import RELayer
 from FCdropLayer import FCdropLayer
 from CPdropLayer import CPdropLayer
 from RCdropLayer import RCdropLayer
+from REdropLayer import REdropLayer
 
 # define dropout
-def dropout_from_layer(trng, input, p=0.5):
+def dropout_from_layer(trng, input, p):
     ''' dropout '''
     mask = T.cast(trng.binomial(n=1, p=1-p, size=input.shape), theano.config.floatX)
     output = input * mask
@@ -55,13 +57,13 @@ def building_model(opts):
         players = []
         for p in xrange(p_RC_layer):
             if opts['dropRC']:
-                layerRC = RCdropLayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['numStep'], 
+                layerRC = REdropLayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['numStep'], 
                                       LRN=opts['LRN'], BN=opts['BN'], BN_mode=0,
                                       pool=opts['pool'], pool_mode=opts['poolMode'], 
                                       L=l_RC_layer, l=l+1, k_top=opts['kTop'], s=s,
                                       p=opts['dropRate'], activation=opts['activationRC'])
             else:
-                layerRC = RCLayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['numStep'], 
+                layerRC = RELayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['numStep'], 
                                   LRN=opts['LRN'], BN=opts['BN'], BN_mode=0,
                                   pool=opts['pool'], pool_mode=opts['poolMode'], 
                                   L=l_RC_layer, l=l+1, k_top=opts['kTop'], s=s,
@@ -158,7 +160,7 @@ def building_model(opts):
         # repeat above but using recurrent convolution
         players = []
         for p in xrange(p_RC_layer):
-            layerRC = RCLayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['numStep'], 
+            layerRC = RELayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['numStep'], 
                               LRN=opts['LRN'], BN=opts['BN'], BN_mode=1,
                               pool=opts['pool'], pool_mode=opts['poolMode'], 
                               L=l_RC_layer, l=l+1, k_top=opts['kTop'], s=s,

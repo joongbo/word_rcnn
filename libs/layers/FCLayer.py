@@ -6,11 +6,13 @@ import theano.tensor as T
 from activations import *
 from initializers import *
 
+from BatchNormalization import *
+
 # define a class of a fully connected layer
 
 class FCLayer(object):
     """ Layer of a fully connected (or feed forward) network """
-    def __init__(self, rng, trng, input, n_in, n_out,
+    def __init__(self, rng, trng, input, n_in, n_out, BN=False, BN_mode=0,
                  W=None, b=None, activation=tanh):
         
         self.rng = rng
@@ -29,13 +31,18 @@ class FCLayer(object):
             self.W = W
             self.b = b
             self.params = [self.W, self.b]
-
             
-
         # parameters of the model
         self.loutput = T.dot(self.input, self.W) + self.b
         self.output = self.loutput
         self.output_shape = (input.shape[0], n_out)
+        
+        self.BN = BN
+        self.BN_mode = BN_mode
+        if self.BN:
+            self._batch_normalize = BatchNormalization(self.output_shape, mode=self.BN_mode)
+            self.params += self._batch_normalize.params
+            self.output = self._batch_normalize.get_result(self.output)
 
         self.output = self.activation(self.output)
         

@@ -2,7 +2,6 @@ import _init_path
 import numpy as np
 import theano
 import theano.tensor as T
-from theano.sandbox.rng_mrg import MRG_RandomStreams
 
 from backpropagations import *
 from activations import *
@@ -14,18 +13,10 @@ from FCdropLayer import FCdropLayer
 from CPdropLayer import CPdropLayer
 from RCdropLayer import RCdropLayer
 
-# define dropout
-def dropout_from_layer(trng, input, p=0.5):
-    ''' dropout '''
-    mask = T.cast(trng.binomial(n=1, p=1-p, size=input.shape), theano.config.floatX)
-    output = input * mask
-    return output
-
 def building_model(opts):
     print 'build layers of RCNN ...'
     rng = np.random.RandomState(21625)
     trng = T.shared_randomstreams.RandomStreams(21625)
-    mrgrng = MRG_RandomStreams(21625)
     
     # allocate symbolic variables for the data
     x = T.imatrix('x') # the data is presented as rasterized images
@@ -38,7 +29,6 @@ def building_model(opts):
     
     x_g = theano.gradient.grad_clip(x, -10, 10) # gradient clipping
     inputWords = layerWE.Words[x_g,:].dimshuffle(0,2,1,'x') # reshape input
-    if opts['dropWE']: inputWords = dropout_from_layer(mrgrng, inputWords, p=opts['dropRate'])
     input_shape = (opts['miniBatch'], opts['embdSize'], opts['maxLen'], 1)
 
     fltrRC = np.asarray(opts['fltrRC'], dtype='int32')
@@ -56,14 +46,12 @@ def building_model(opts):
         for p in xrange(p_RC_layer):
             if opts['dropRC']:
                 layerRC = RCdropLayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['numStep'], 
-                                      LRN=opts['LRN'], BN=opts['BN'], BN_mode=0,
                                       pool=opts['pool'], pool_mode=opts['poolMode'], 
                                       L=l_RC_layer, l=l+1, k_top=opts['kTop'], s=s,
-                                      p=opts['dropRate'], activation=opts['activationRC'])
+                                      LRN=opts['LRN'], p=opts['dropRate'], activation=opts['activationRC'])
             else:
                 layerRC = RCLayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['numStep'], 
-                                  LRN=opts['LRN'], BN=opts['BN'], BN_mode=0,
-                                  pool=opts['pool'], pool_mode=opts['poolMode'], 
+                                  LRN=opts['LRN'], pool=opts['pool'], pool_mode=opts['poolMode'], 
                                   L=l_RC_layer, l=l+1, k_top=opts['kTop'], s=s,
                                   activation=opts['activationRC'])
             players.append(layerRC)
@@ -87,14 +75,14 @@ def building_model(opts):
     outUnit = np.insert(outUnit, 0, sum(_input_shapes))
     for l in xrange(l_FC_layer):
         if l+1 == l_FC_layer:
-            layerFC = FCLayer(rng, trng, _input, outUnit[l], outUnit[l+1], BN=opts['BN'], BN_mode=0,
+            layerFC = FCLayer(rng, trng, _input, outUnit[l], outUnit[l+1],
                               activation=softmax)
         else:
             if opts['dropFC']:
-                layerFC = FCdropLayer(rng, trng, _input, outUnit[l], outUnit[l+1], BN=opts['BN'], BN_mode=0,
+                layerFC = FCdropLayer(rng, trng, _input, outUnit[l], outUnit[l+1],
                                       p=opts['dropRate'], activation=opts['activationFC'])
             else:
-                layerFC = FCLayer(rng, trng, _input, outUnit[l], outUnit[l+1], BN=opts['BN'], BN_mode=0,
+                layerFC = FCLayer(rng, trng, _input, outUnit[l], outUnit[l+1],
                                   activation=opts['activationFC'])
         _input = layerFC.output
         layers.append(layerFC)
@@ -159,8 +147,7 @@ def building_model(opts):
         players = []
         for p in xrange(p_RC_layer):
             layerRC = RCLayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['numStep'], 
-                              LRN=opts['LRN'], BN=opts['BN'], BN_mode=1,
-                              pool=opts['pool'], pool_mode=opts['poolMode'], 
+                              LRN=opts['LRN'], pool=opts['pool'], pool_mode=opts['poolMode'], 
                               L=l_RC_layer, l=l+1, k_top=opts['kTop'], s=s,
                               activation=opts['activationRC'],W=layers[layers_cnt][p].W, b=layers[layers_cnt][p].b)
             players.append(layerRC)
@@ -184,10 +171,10 @@ def building_model(opts):
     outUnit = np.insert(outUnit, 0, sum(_input_shapes))
     for l in xrange(l_FC_layer):
         if l+1 == l_FC_layer:
-            layerFC = FCLayer(rng, trng, _input, outUnit[l], outUnit[l+1], BN=opts['BN'], BN_mode=1,
+            layerFC = FCLayer(rng, trng, _input, outUnit[l], outUnit[l+1], 
                               activation=softmax, W=layers[layers_cnt].W, b=layers[layers_cnt].b)
         else:
-            layerFC = FCLayer(rng, trng, _input, outUnit[l], outUnit[l+1], BN=opts['BN'], BN_mode=1,
+            layerFC = FCLayer(rng, trng, _input, outUnit[l], outUnit[l+1],
                               activation=opts['activationFC'], W=layers[layers_cnt].W, b=layers[layers_cnt].b)
         layers_cnt += 1
         _input = layerFC.output

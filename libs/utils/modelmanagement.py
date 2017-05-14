@@ -126,18 +126,27 @@ def testing_model(data, model):
 
 def initializing_model(opts, layers, params):
     new_params = []
+    cnt = 0
     for layer in layers:
         if isinstance(layer, list):
             for _layer in layer:
                 _layer.initialize_weights(svd_init=opts['initSVD'])
                 new_params += _layer.params
+                if opts['BN']:
+                    _layer._batch_normalize.initialize_weights()
+                    new_params += _layer._batch_normalize.params
         else:
             layer.initialize_weights(svd_init=opts['initSVD'])
             new_params += layer.params
+            if opts['BN'] and cnt != 0:
+                layer._batch_normalize.initialize_weights()
+                new_params += layer._batch_normalize.params
+        cnt += 1
         
     if opts['embdUpdate'] is not True:
         new_params = new_params[1:]
-
+    #print "params:", params
+    #print "new_params:", new_params
     for param, new_param in zip(params, new_params):
         param.set_value(new_param.get_value())
     

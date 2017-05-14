@@ -13,7 +13,7 @@ from LocalResponseNormalization import *
 
 # define a class of a recurrent convolutional layer
 
-class RCLayer(object):
+class RELayer(object):
     """ Layer of a recurrent convolutional network """
     def __init__(self, rng, trng, input, input_shape, filter_figure, n_steps, 
                  LRN=False, BN=False, BN_mode=0,
@@ -81,11 +81,10 @@ class RCLayer(object):
             conv_out = conv2d(input=out_tm1, input_shape=self.input_shape, 
                            filters=self.W, filter_shape=self.filter_shape, 
                            border_mode='half')
-            out_t = self.input + T.addbroadcast(conv_out,3) + self.b.dimshuffle('x',0,'x','x')
+            out_t = T.addbroadcast(conv_out,3) + self.b.dimshuffle('x',0,'x','x')
             if self.BN: out_t = self._batch_normalize.get_result(out_t)
             out_t = self.activation(out_t)
             if self.LRN: out_t = self._lrn(out_t)
-            #if self.LRN: out_t = self._local_resp_normalize(out_t, self.filter_shape[0])
                     
             return out_t
         
