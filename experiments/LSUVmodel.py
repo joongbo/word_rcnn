@@ -18,7 +18,7 @@ def main(fNames, opts, learning_opts):
         from modelR import building_model
     elif fNames['model']=='modelRE':
         fresult = './savings/modelRE_' + fNames['log']
-        from modelRE import building_model
+        from modelRC import building_model
     else:
         raise NotImplementedError('Model must be one of {modelR, modelRE}')
     dataFpath='../data/pickles/' + fNames['data']
@@ -58,19 +58,15 @@ def main(fNames, opts, learning_opts):
     print 'learning parameters', learning_opts, '\n'
         
     start_time = timeit.default_timer()
-    train_model, valid_model, test_model, layers, params, _ = building_model(opts)
+    train_model, valid_model, test_model, layers, params, x = building_model(opts)
     end_time = timeit.default_timer()
     print 'Builing Model ran for %.2fm' % ( (end_time - start_time) / 60. )
     
     datasets = [train_data, valid_data, test_data]
     models = [train_model, valid_model, test_model]
     
-    print 'test model accuracy:'
-    print testing_model(test_data, test_model)
-    print 'no problem, gogo!'
     for i in xrange(learning_opts['trainN']):
-        print '\nphase: ', i
-        initializing_model(opts, layers, params)
+        LSUVinitializing_model(opts, layers, params, train_data, x)
         training_model(datasets, models, opts, learning_opts, fresult, params, i)
 
 if __name__=='__main__':

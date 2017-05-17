@@ -85,7 +85,7 @@ if __name__=='__main__':
     p.add_argument('--embd', type=int, default=1)
     p.add_argument('--embdSize', type=int, default=300)
     p.add_argument('--embdUpdate', type=int, default=1)
-    p.add_argument('--borderMode', type=str, default='full')
+    p.add_argument('--borderMode', type=str, default='half')
     p.add_argument('--numStep', type=int, default=1)
     p.add_argument('--numFltrRC', type=int, default=50)
     p.add_argument('--fltrC', type=int, default=5)
@@ -128,7 +128,9 @@ if __name__=='__main__':
     opts['embdSize'] = args.embdSize
     opts['embdUpdate'] = True if args.embdUpdate else False
     # recurrent convolutional layer
-    opts['fltrRC'] = [[(args.numFltrRC, args.fltrC, args.fltrR)]]
+    opts['fltrRC'] = [[(args.numFltrRC, args.fltrC, args.fltrR)],
+                      [(args.numFltrRC, args.fltrC, args.fltrR)],
+                      [(args.numFltrRC, args.fltrC, args.fltrR)]]
     opts['borderMode'] = args.borderMode # one of ['valid', 'full', 'half']
     opts['numStep'] = args.numStep
     if args.activationRC=='relu':

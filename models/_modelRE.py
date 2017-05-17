@@ -8,12 +8,8 @@ from backpropagations import *
 from activations import *
 from WELayer import WELayer
 from FCLayer import FCLayer
-from CPLayer import CPLayer
-from RCLayer import RCLayer
 from RELayer import RELayer
 from FCdropLayer import FCdropLayer
-from CPdropLayer import CPdropLayer
-from RCdropLayer import RCdropLayer
 from REdropLayer import REdropLayer
 
 # define dropout
@@ -200,4 +196,4 @@ def building_model(opts):
                                   allow_input_downcast=True, 
                                   on_unused_input='ignore')
     
-    return train_model, valid_model, test_model, layers, params
+    return train_model, valid_model, test_model, layers, params, x

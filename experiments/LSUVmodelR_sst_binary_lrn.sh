@@ -1,0 +1,4 @@
+THEANO_FLAGS=device=cuda0 python LSUVmodel.py --model modelR --data ssa_binary_v18242.pkl --w2v glove_ssa_binary_v18242.pkl --embd 1 --embdUpdate 0 --numFltrRC 300 --fltrR 5 --numStep 2 --LRN 1 --outUnit 20 --trainN 10 --dropRate 0.25 --L2 1e-4 --log LSUV_ssa_binary_v18242_hidd20_glove_lrn_T2.pkl
+#THEANO_FLAGS=device=cuda0 python LSUVmodel.py --model modelR --data ssa_binary_v18242.pkl --w2v glove_ssa_binary_v18242.pkl --embd 1 --embdUpdate 0 --numFltrRC 300 --fltrR 5 --numStep 2 --LRN 1 --outUnit 20 --trainN 10 --dropRate 0.25 --L2 1e-4 --log ssa_binary_v18242_hidd20_glove_lrn_T2.pkl
+#THEANO_FLAGS=device=cuda0 python LSUVmodel.py --model modelR --data ssa_binary_v18242.pkl --w2v glove_ssa_binary_v18242.pkl --embd 1 --embdUpdate 0 --numFltrRC 300 --fltrR 5 --numStep 1 --LRN 1 --outUnit 20 --trainN 10 --dropRate 0.25 --L2 1e-4 --log ssa_binary_v18242_hidd20_glove_lrn_T1.pkl
+#

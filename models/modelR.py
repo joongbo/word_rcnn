@@ -8,10 +8,8 @@ from backpropagations import *
 from activations import *
 from WELayer import WELayer
 from FCLayer import FCLayer
-from CPLayer import CPLayer
 from RCLayer import RCLayer
 from FCdropLayer import FCdropLayer
-from CPdropLayer import CPdropLayer
 from RCdropLayer import RCdropLayer
 
 # define dropout
@@ -24,7 +22,7 @@ def dropout_from_layer(trng, input, p=0.5):
 def building_model(opts):
     print 'build layers of RCNN ...'
     rng = np.random.RandomState(21625)
-    trng = T.shared_randomstreams.RandomStreams(21625)
+    trng = MRG_RandomStreams(21625)#T.shared_randomstreams.RandomStreams(21625)
     mrgrng = MRG_RandomStreams(21625)
     
     # allocate symbolic variables for the data
@@ -53,20 +51,36 @@ def building_model(opts):
     for l in xrange(l_RC_layer):
         # repeat above but using recurrent convolution
         players = []
-        for p in xrange(p_RC_layer):
-            if opts['dropRC']:
-                layerRC = RCdropLayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['numStep'], 
+        if l+1 == l_RC_layer:
+            for p in xrange(p_RC_layer):
+                if opts['dropRC']:
+                    layerRC = RCdropLayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['numStep'], 
+                                          LRN=opts['LRN'], BN=opts['BN'], BN_mode=0,
+                                          pool=True, pool_mode=opts['poolMode'], 
+                                          L=l_RC_layer, l=l+1, k_top=opts['kTop'], s=s,
+                                          p=opts['dropRate'], activation=opts['activationRC'])
+                else:
+                    layerRC = RCLayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['numStep'], 
+                                      LRN=opts['LRN'], BN=opts['BN'], BN_mode=0,
+                                      pool=True, pool_mode=opts['poolMode'], 
+                                      L=l_RC_layer, l=l+1, k_top=opts['kTop'], s=s,
+                                      activation=opts['activationRC'])
+                players.append(layerRC)
+        else:
+            for p in xrange(p_RC_layer):
+                if opts['dropRC']:
+                    layerRC = RCdropLayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['numStep'], 
+                                          LRN=opts['LRN'], BN=opts['BN'], BN_mode=0,
+                                          pool=opts['pool'], pool_mode=opts['poolMode'], 
+                                          L=l_RC_layer, l=l+1, k_top=opts['kTop'], s=s,
+                                          p=opts['dropRate'], activation=opts['activationRC'])
+                else:
+                    layerRC = RCLayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['numStep'], 
                                       LRN=opts['LRN'], BN=opts['BN'], BN_mode=0,
                                       pool=opts['pool'], pool_mode=opts['poolMode'], 
                                       L=l_RC_layer, l=l+1, k_top=opts['kTop'], s=s,
-                                      p=opts['dropRate'], activation=opts['activationRC'])
-            else:
-                layerRC = RCLayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['numStep'], 
-                                  LRN=opts['LRN'], BN=opts['BN'], BN_mode=0,
-                                  pool=opts['pool'], pool_mode=opts['poolMode'], 
-                                  L=l_RC_layer, l=l+1, k_top=opts['kTop'], s=s,
-                                  activation=opts['activationRC'])
-            players.append(layerRC)
+                                      activation=opts['activationRC'])
+                players.append(layerRC)
         layers.append(players)
 
         # calculate for next layers
@@ -120,6 +134,7 @@ def building_model(opts):
     cost = layerFC.cross_entropy(y)
     # cost = layerFC.negative_log_likelihood(y)
     cost += opts['L1']*norm_l1 + opts['L2']*norm_l2
+    
     grads = T.grad(cost, params)
     updates = opts['updateRule'](grads, params, learning_rate = leaning_rate)
     
@@ -157,13 +172,22 @@ def building_model(opts):
     for l in xrange(l_RC_layer):
         # repeat above but using recurrent convolution
         players = []
-        for p in xrange(p_RC_layer):
-            layerRC = RCLayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['numStep'], 
-                              LRN=opts['LRN'], BN=opts['BN'], BN_mode=1,
-                              pool=opts['pool'], pool_mode=opts['poolMode'], 
-                              L=l_RC_layer, l=l+1, k_top=opts['kTop'], s=s,
-                              activation=opts['activationRC'],W=layers[layers_cnt][p].W, b=layers[layers_cnt][p].b)
-            players.append(layerRC)
+        if l+1 == l_RC_layer:
+            for p in xrange(p_RC_layer):
+                layerRC = RCLayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['numStep'], 
+                                  LRN=opts['LRN'], BN=opts['BN'], BN_mode=1,
+                                  pool=True, pool_mode=opts['poolMode'], 
+                                  L=l_RC_layer, l=l+1, k_top=opts['kTop'], s=s_test.dimshuffle('x'),
+                                  activation=opts['activationRC'],W=layers[layers_cnt][p].W, b=layers[layers_cnt][p].b)
+                players.append(layerRC)
+        else:
+            for p in xrange(p_RC_layer):
+                layerRC = RCLayer(rng, trng, inputs[p], input_shapes[p], fltrRC[l][p], opts['numStep'], 
+                                  LRN=opts['LRN'], BN=opts['BN'], BN_mode=1,
+                                  pool=opts['pool'], pool_mode=opts['poolMode'], 
+                                  L=l_RC_layer, l=l+1, k_top=opts['kTop'], s=s_test.dimshuffle('x'),
+                                  activation=opts['activationRC'],W=layers[layers_cnt][p].W, b=layers[layers_cnt][p].b)
+                players.append(layerRC)
         layers_cnt += 1
 
         # calculate for next layers
@@ -198,4 +222,4 @@ def building_model(opts):
                                   allow_input_downcast=True, 
                                   on_unused_input='ignore')
     
-    return train_model, valid_model, test_model, layers, params
+    return train_model, valid_model, test_model, layers, params, x

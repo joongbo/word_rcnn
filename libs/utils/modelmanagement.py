@@ -4,6 +4,7 @@ import cPickle as pkl
 
 import numpy as np
 import theano
+import theano.tensor as T
 
 from datamanagement import *
 from backpropagations import *
@@ -126,28 +127,82 @@ def testing_model(data, model):
 
 def initializing_model(opts, layers, params):
     new_params = []
-    cnt = 0
-    for layer in layers:
+    for layer in layers[1:]:
         if isinstance(layer, list):
             for _layer in layer:
                 _layer.initialize_weights(svd_init=opts['initSVD'])
                 new_params += _layer.params
                 if opts['BN']:
+                    raise NotImplementedError('Batch Normalization is not supported')
                     _layer._batch_normalize.initialize_weights()
                     new_params += _layer._batch_normalize.params
         else:
             layer.initialize_weights(svd_init=opts['initSVD'])
             new_params += layer.params
-            if opts['BN'] and cnt != 0:
+            if opts['BN']:
+                raise NotImplementedError('Batch Normalization is not supported')
                 layer._batch_normalize.initialize_weights()
                 new_params += layer._batch_normalize.params
-        cnt += 1
         
-    if opts['embdUpdate'] is not True:
-        new_params = new_params[1:]
+    #if opts['embdUpdate'] is not True:
+    #    new_params = new_params[1:]
     #print "params:", params
     #print "new_params:", new_params
     for param, new_param in zip(params, new_params):
         param.set_value(new_param.get_value())
     
     print 'Initialized model successfully'
+
+    
+def LSUVinitializing_model(opts, layers, params, data, x):
+    if opts['BN']:
+        raise NotImplementedError('Batch Normalization is not supported')
+        
+    mb = 100
+    margin = 0.1
+    max_iter = 10
+    print 'LSUV initialization ...'
+    
+    cnt=0
+    for layer in layers[1:]:
+        if isinstance(layer, list):
+            for _layer in layer:
+                _layer.initialize_weights(svd_init=True)
+                n_iter = 0
+                while(n_iter < max_iter):
+                    sample, _, _ = shuffle_data(data)
+                    get_output = theano.function([x], [_layer.input, _layer.output_1st, _layer.output], 
+                                                 allow_input_downcast=True, 
+                                                 on_unused_input='ignore')
+                    [input, output_1st, output] = get_output(sample[:mb])
+                    target = np.var(input)
+                    var_out_1st = np.var(output_1st)
+                    var_out = np.var(output)
+                    n_iter += 1
+                    print '%d: %.4f, %.4f, %.4f\t' %(n_iter, target, var_out_1st, var_out)
+                    if abs(var_out - target) < target*margin:
+                        break
+                    #_layer.W.set_value( _layer.W.get_value() / np.sqrt(var_out) )
+                    params[cnt*2].set_value( params[cnt*2].get_value() / (np.sqrt(var_out/target)**(1/_layer.n_steps)) )
+        else:
+            layer.initialize_weights(svd_init=True)
+            n_iter = 0
+            while(n_iter < max_iter):
+                sample, _, _ = shuffle_data(data)
+                if layer == layers[-1]:
+                    output = layer.loutput
+                else:
+                    output = layer.output
+                get_output = theano.function([x], output, 
+                                             allow_input_downcast=True, 
+                                             on_unused_input='ignore')
+                output = get_output(sample[:mb])
+                var_out = np.var(output)
+                n_iter += 1
+                print '%d: %.4f\t' %(n_iter, var_out)
+                if abs(var_out - target) < target*margin:
+                    break
+                #layer.W.set_value( layer.W.get_value() / np.sqrt(var_out) )
+                params[cnt*2].set_value( params[cnt*2].get_value() / np.sqrt(var_out/target) )
+        cnt += 1
+    print '\tdone.'

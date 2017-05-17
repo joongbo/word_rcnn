@@ -33,8 +33,7 @@ class RCLayer(object):
         output_shape = (input_shape[0], filter_shape[0], output_border, input_shape[3])
         
         if pool:
-            if not (pool_mode is 'k_max' or pool_mode is 'd_k_max' or 
-                    pool_mode is 'spatial' or pool_mode is 'max'):
+            if pool_mode not in ['k_max', 'd_k_max', 'spatial', 'max']:
                 raise TypeError('pool_mode must be one of [k_max, d_k_max, max, spatial], given', pool_mode)
             if L is None or l is None or k_top is None or s is None:
                 raise TypeError('any pooling variables must not be None')
@@ -42,7 +41,7 @@ class RCLayer(object):
         # assign class variables
         self.rng = rng
         self.trng = trng
-        self.input = input
+        self.input = T.addbroadcast(input,3)
         self.input_shape = input_shape
         self.activation = activation
         
@@ -96,12 +95,15 @@ class RCLayer(object):
         self.output = out_t[-1]
                 
         if self.pool:
-            if self.pool_mode is 'd_k_max':
-                self._dynamic_kmax_pooling()
+            if self.pool_mode=='d_k_max':
+                self._dynamic_k_max_pooling()
             elif self.pool_mode=='k_max':
-                self._kmax_pooling()
+                self._k_max_pooling()
             elif self.pool_mode=='max' or self.pool_mode=='spatial':
                 self._pooling()
+            else:
+                raise TypeError('pooling is failed')
+            
         
     def initialize_weights(self, svd_init=False):
         if svd_init:
@@ -148,7 +150,49 @@ class RCLayer(object):
         self.output = pool.pool_2d(input=input, ws=pool_shape, ignore_border=True)
         self.output_shape = (input_shape[0], input_shape[1], k_l, input_shape[3])
 
-    def _kmax_pooling(self):
-        raise NotImplementedError()
-    def _dynamic_kmax_pooling(self):
-        raise NotImplementedError()
+    def _k_max_pooling(self):
+        ''' k max pooling '''
+        input = self.output
+        input_shape = self.output_shape
+
+        s = input_shape[2]
+        k_l = max(self.k_top, s*(self.L-self.l)//self.L)
+        sorted_idx = T.argsort(input, axis = 2)
+        sorted_idx = sorted_idx[:,:,-k_l:,:]
+        sorted_idx  = T.sort(sorted_idx, axis=2)
+
+        output = input.reshape((input_shape[0]*input_shape[1],input_shape[2]))
+        ii = T.repeat(T.arange(output.shape[0]), sorted_idx.shape[2])
+        jj = sorted_idx.flatten()
+
+        self.output = output[ii,jj].reshape(sorted_idx.shape)
+        self.output_shape = (input_shape[0], input_shape[1], k_l, input_shape[3])
+        
+    def _dynamic_k_max_pooling(self):
+        ''' dynamic k max pooling '''
+        input = self.output
+        input_shape = self.output_shape
+
+        reduced = max(self.k_top, input_shape[2]*(self.L-self.l)//self.L)
+        k_l = T.maximum(self.k_top, self.s*(self.L-self.l)//self.L)
+        input_shape = np.asarray(input_shape, dtype='int32')
+        def pooling_step(x, k, input_shape):
+            reshaped = x.reshape((input_shape[1],input_shape[2])) # reshaped from 3-dim to 2-dim
+            sorted_idx = T.argsort(reshaped, axis = 1)
+            sorted_idx = sorted_idx[:,-k:]
+            sorted_idx  = T.sort(sorted_idx, axis=1)
+
+            ii = T.repeat(T.arange(reshaped.shape[0]), sorted_idx.shape[1])
+            jj = sorted_idx.flatten()
+
+            sorted_img = reshaped[ii,jj].reshape(sorted_idx.shape) # flat to 2-dim
+            padding = T.zeros((sorted_img.shape[0], reduced - k), dtype=theano.config.floatX)
+            padded = T.concatenate([sorted_img, padding], axis=1)
+            return padded
+
+        output, _ = theano.scan(fn = pooling_step, 
+                                sequences = [input, k_l], 
+                                non_sequences = input_shape) 
+
+        self.output_shape = (input_shape[0], input_shape[1], reduced, input_shape[3])
+        self.output = output.reshape(self.output_shape)

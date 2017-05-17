@@ -44,14 +44,13 @@ def main(fNames, opts, learning_opts):
     else:
         opts['outUnit'] = [opts['outUnit'], len(Counter(data[0][1]).keys())]
 
-    print 'fitting length of sentences ...',
+    print 'fitting length of sentences ...'
     train_data = fit_length(data[0], max_len=opts['maxLen'])
     valid_data = fit_length(data[1], max_len=opts['maxLen_test'])
     test_data = fit_length(data[2], max_len=opts['maxLen_test'])
 
-    print 'fitting mini-batch size for training data ...',
+    print 'fitting mini-batch size for training data ...'
     train_data = fit_batch_add(train_data, opts['miniBatch'])
-    print '\n'
     
     print '\nfile names', fNames
     print 'hyper parameters', opts
@@ -85,9 +84,9 @@ if __name__=='__main__':
     p.add_argument('--embd', type=int, default=1)
     p.add_argument('--embdSize', type=int, default=300)
     p.add_argument('--embdUpdate', type=int, default=1)
-    p.add_argument('--borderMode', type=str, default='full')
+    p.add_argument('--borderMode', type=str, default='half')
     p.add_argument('--numStep', type=int, default=1)
-    p.add_argument('--numFltrRC', type=int, default=50)
+    p.add_argument('--numFltrRC', type=int, default=300)
     p.add_argument('--fltrC', type=int, default=5)
     p.add_argument('--fltrR', type=int, default=5)
     p.add_argument('--pool', type=int, default=1)
@@ -128,7 +127,8 @@ if __name__=='__main__':
     opts['embdSize'] = args.embdSize
     opts['embdUpdate'] = True if args.embdUpdate else False
     # recurrent convolutional layer
-    opts['fltrRC'] = [[(args.numFltrRC, args.fltrC, args.fltrR)]]
+    opts['fltrRC'] = [[(args.numFltrRC, args.fltrC, args.fltrR)],
+                      [(args.numFltrRC, args.fltrC, args.fltrR)]]
     opts['borderMode'] = args.borderMode # one of ['valid', 'full', 'half']
     opts['numStep'] = args.numStep
     if args.activationRC=='relu':

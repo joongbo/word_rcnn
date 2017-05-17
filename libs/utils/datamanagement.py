@@ -9,7 +9,42 @@ def load_w2v(data_file):
     
     return word2vec, word2idx
 
-# load twitter dataset from .pkl file
+# load TREC dataset from .pkl file
+def load_trec(data_file='trec.pkl', num_valid=150):
+    pkl_f = open(data_file, 'rb')
+    train, test, vocab = pkl.load(pkl_f)
+    pkl_f.close()
+    
+    # split training set into validation set
+    data_x, data_y, data_l = train
+    if len(data_x) != len(data_y) or len(data_y) != len(data_l):
+        raise IOError('Bad input: lengths are not matched')
+    num_samples = len(data_y)
+    sidx = np.random.permutation(num_samples)
+    
+    valid_x = []
+    valid_y = []
+    valid_l = []
+    train_x = []
+    train_y = []
+    train_l = []
+    for i in xrange(num_samples):
+        if i < num_valid:
+            valid_x.append(data_x[ sidx[i] ])
+            valid_y.append(data_y[ sidx[i] ])
+            valid_l.append(data_l[ sidx[i] ])
+        else:
+            train_x.append(data_x[ sidx[i] ])
+            train_y.append(data_y[ sidx[i] ])
+            train_l.append(data_l[ sidx[i] ])
+
+    train = [train_x, train_y, train_l]
+    valid = [valid_x, valid_y, valid_l]
+
+    data = [train, valid, test]
+    return data, vocab
+
+# load Stanford Sentiment Treebank dataset from .pkl file
 def load_sst(data_file):
     pkl_f = open(data_file, 'rb')
     train, valid, test, vocab = pkl.load(pkl_f)

@@ -1,0 +1,1 @@
+THEANO_FLAGS=device=cuda1 python model2L.py --model modelR --data ssa_v18242.pkl --w2v glove_ssa_v18242.pkl --embd 1 --embdUpdate 0 --numFltrRC 300 --fltrR 3 --numStep 2 --LRN 1 --trainN 3 --dropRate 0.25 --pool 0 --L2 1e-5 --log test.pkl
