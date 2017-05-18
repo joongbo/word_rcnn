@@ -38,7 +38,7 @@ def building_model(opts):
     if opts['dropWE']: inputWords = dropout_from_layer(trng, inputWords, p=opts['dropRate'])
     input_shape = (opts['miniBatch'], opts['embdSize'], opts['maxLen'], 1)
 
-    fltrCuConv = np.asarray(opts['fltrCuConv'], dtype='int32')
+    fltrCuConv = np.asarray(opts['fltrRC'], dtype='int32')
     l_CuConv_layer, p_CuConv_layer, _ = fltrCuConv.shape
     inputs = []
     input_shapes = []
