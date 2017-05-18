@@ -13,7 +13,7 @@ from LocalResponseNormalization import *
 
 # define a class of a recurrent convolutional layer
 
-class RCLayer(object):
+class CuConvLayer(object):
     """ Layer of a recurrent convolutional network """
     def __init__(self, rng, trng, input, input_shape, filter_figure, n_steps, 
                  LRN=False, BN=False, BN_mode=0,

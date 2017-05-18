@@ -13,14 +13,14 @@ from activations import *
 
 def main(fNames, opts, learning_opts):
     # if-statement for different model
-    if fNames['model']=='modelR':
-        fresult = './savings/modelR_' + fNames['log']
+    if fNames['model']=='modelReConv':
+        fresult = './savings/modelReConv_' + fNames['log']
         from modelR import building_model
-    elif fNames['model']=='modelRE':
-        fresult = './savings/modelRE_' + fNames['log']
+    elif fNames['model']=='modelCuConv':
+        fresult = './savings/modelCuConv_' + fNames['log']
         from modelRE import building_model
     else:
-        raise NotImplementedError('Model must be one of {modelR, modelRE}')
+        raise NotImplementedError('Model must be one of {modelReConv, modelCuConv}')
     dataFpath='../data/pickles/' + fNames['data']
     w2vFpath ='../data/pickles/' + fNames['w2v']
     

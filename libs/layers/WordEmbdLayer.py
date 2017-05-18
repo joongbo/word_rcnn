@@ -5,7 +5,7 @@ from initializers import *
 
 # define a class of a word embedding layer
         
-class WELayer(object):
+class WordEmbdLayer(object):
     def __init__(self, rng, V, k, w2v=None):
         ''' 
             [input]

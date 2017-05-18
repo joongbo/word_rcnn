@@ -1,2 +1,0 @@
-THEANO_FLAGS=device=cuda0 python model.py --model modelR --data ssa_binary_v18242.pkl --w2v glove_ssa_binary_v18242.pkl --embd 1 --embdUpdate 0 --numFltrRC 300 --fltrR 5 --numStep 2 --LRN 1 --trainN 20 --dropRate 0.5 --L2 1e-4 --log drop5lrn_ssa_binary_v18242_T2_glove.pkl
-#

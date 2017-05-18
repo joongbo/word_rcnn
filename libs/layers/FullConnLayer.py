@@ -10,7 +10,7 @@ from BatchNormalization import *
 
 # define a class of a fully connected layer
 
-class FCLayer(object):
+class FullConnLayer(object):
     """ Layer of a fully connected (or feed forward) network """
     def __init__(self, rng, trng, input, n_in, n_out, BN=False, BN_mode=0,
                  W=None, b=None, activation=tanh):
