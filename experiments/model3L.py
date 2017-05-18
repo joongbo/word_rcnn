@@ -15,10 +15,10 @@ def main(fNames, opts, learning_opts):
     # if-statement for different model
     if fNames['model']=='modelReConv':
         fresult = './savings/modelReConv_' + fNames['log']
-        from modelR import building_model
+        from modelReConv import building_model
     elif fNames['model']=='modelCuConv':
         fresult = './savings/modelCuConv_' + fNames['log']
-        from modelRE import building_model
+        from modelCuConv import building_model
     else:
         raise NotImplementedError('Model must be one of {modelReConv, modelCuConv}')
     dataFpath='../data/pickles/' + fNames['data']
